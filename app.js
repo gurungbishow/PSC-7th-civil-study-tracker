@@ -290,7 +290,7 @@ window.handleLoggerAddStudy = function (status = 'remaining') {
 };
 
 window.handleLoggerStartStudy = function () {
-  window.handleLoggerAddStudy('completed');
+  window.handleLoggerAddStudy('remaining');
 };
 
 function populateLoggerTopics() {
