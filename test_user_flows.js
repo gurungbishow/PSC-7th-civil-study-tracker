@@ -113,17 +113,24 @@ parts.forEach(p => {
   console.log(`  [OK] ${p} -> ${optionsCount} topics, ${cardsCount} subtopics rendered`);
 });
 
-// TEST 2: Start Studying a Micro-Topic
+// TEST 2: Start Studying a Micro-Topic (Add to Daily Plan as Remaining, then Complete)
 console.log("\n[TEST 2] Starting Study on 'p1_1_1_a' (Physical Geography)...");
 setLoggerPart('p1_part1');
 selectLoggerSubtopic('p1_1_1_a');
 startStudyingSubtopic('p1_1_1_a');
 
 const stateA = AppState.studyState['p1_1_1_a'];
-if (!stateA || stateA.status !== 'studying' || stateA.currentStep !== 0) {
-  throw new Error("Invalid study state after startStudyingSubtopic");
+if (!stateA || stateA.studyStatus !== 'remaining' || stateA.nextRevisionDate !== null) {
+  throw new Error("Invalid study state after startStudyingSubtopic: should be remaining with no next revision date");
 }
-console.log(`  [OK] Sub-topic 'p1_1_1_a' scheduled for 1st revision on: ${stateA.nextRevisionDate}`);
+console.log("  [OK] Sub-topic 'p1_1_1_a' added to Daily Plan as 'remaining' (no premature SRS notifications)");
+
+// Mark completed to activate SRS
+toggleTopicCompletion('p1_1_1_a', formatDate(new Date()));
+if (stateA.studyStatus !== 'completed' || !stateA.nextRevisionDate) {
+  throw new Error("Failed to activate SRS upon marking completed");
+}
+console.log(`  [OK] Sub-topic 'p1_1_1_a' completed & scheduled for 1st revision on: ${stateA.nextRevisionDate}`);
 
 // TEST 3: Spaced Repetition Feedback Cycle
 console.log("\n[TEST 3] Testing SRS Review Feedbacks...");

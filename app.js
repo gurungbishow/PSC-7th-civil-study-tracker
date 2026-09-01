@@ -1011,7 +1011,7 @@ function renderDailyStudyTracker() {
 
 window.startStudyingSubtopic = function (subtopicId, customDate = null) {
   const targetDate = customDate || AppState.selectedStudyTrackerDateStr || formatDate(new Date());
-  addTopicToDate(subtopicId, targetDate, 'completed');
+  addTopicToDate(subtopicId, targetDate, 'remaining');
 };
 
 window.recordSubtopicRevision = function (subtopicId, confidence = 'good') {
@@ -1383,8 +1383,8 @@ function renderSuggestedTopics() {
           <div style="font-size:13px; font-weight:600; color:var(--text-primary); line-height:1.3;">${s.name}</div>
           <div style="font-size:11px; color:var(--text-muted);">${s.parentTopicCode} ${s.parentTopicName.substring(0, 45)}...</div>
         </div>
-        <button type="button" class="btn-start-study" onclick="startStudyingSubtopic('${s.id}')">
-          + Study
+        <button type="button" class="btn-start-study" onclick="startStudyingSubtopic('${s.id}')" title="Add to Today's Study List">
+          + Add to Today
         </button>
       </div>
     `;
@@ -1551,8 +1551,8 @@ function createSubtopicTableRow(subtopic) {
       <td style="width: 160px;">
         <div class="topic-actions">
           ${!state ? `
-            <button type="button" class="btn-start-study" onclick="startStudyingSubtopic('${subtopic.id}')">
-              Start Study
+            <button type="button" class="btn-start-study" onclick="startStudyingSubtopic('${subtopic.id}')" title="Add to Daily Study List">
+              + Add to Plan
             </button>
           ` : `
             <button type="button" class="btn-icon-action" onclick="recordSubtopicRevision('${subtopic.id}', 'good')" title="Mark Revision Done">
