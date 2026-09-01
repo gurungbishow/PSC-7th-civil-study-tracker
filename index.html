@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSC 7th Level Study & Revision Tracker</title>
+  <meta name="description" content="Adaptive Spaced Repetition (1-3-7-21) Study & Revision Tracker for Nepal PSC 7th Level Engineering Exam with Granular Micro-Topic Tracking.">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="app-logo">📐</div>
+        <div class="app-branding">
+          <h1>PSC 7th Tracker</h1>
+          <span>Micro-Topic Spaced Repetition</span>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <button type="button" class="nav-item active" data-tab="dashboard-view" id="nav-dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Today's Plan</span>
+          <span class="badge" id="sidebar-rev-badge" style="display:none;">0</span>
+        </button>
+        
+        <button type="button" class="nav-item" data-tab="syllabus-view" id="nav-syllabus">
+          <span class="nav-icon">📚</span>
+          <span>Syllabus Matrix</span>
+        </button>
+        
+        <button type="button" class="nav-item" data-tab="calendar-view" id="nav-calendar">
+          <span class="nav-icon">📅</span>
+          <span>Revision Calendar</span>
+        </button>
+        
+        <button type="button" class="nav-item" data-tab="analytics-view" id="nav-analytics">
+          <span class="nav-icon">📈</span>
+          <span>Exam Analytics</span>
+        </button>
+        
+        <button type="button" class="nav-item" data-tab="settings-view" id="nav-settings">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings & Backup</span>
+        </button>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="streak-pill" id="streak-indicator" title="Current Daily Study Streak">
+          <span>🔥</span>
+          <span id="streak-count">0 Days</span>
+        </div>
+        <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle Dark/Light Mode">
+          🌓
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main App Content -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button type="button" class="menu-toggle-btn" id="menu-toggle-btn">☰</button>
+          <div class="header-title">
+            <h2 id="view-title">Today's Study & Revision Plan</h2>
+            <p id="view-subtitle">PSC 7th Level (Civil Engineering & General Subject)</p>
+          </div>
+        </div>
+        
+        <div class="header-actions">
+          <div class="quick-search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="global-search-input" placeholder="Search sub-topics (e.g. physical, RCC, fluid)...">
+          </div>
+          
+          <div class="exam-countdown-badge" id="exam-countdown-badge" title="Click to edit Exam Date">
+            <span class="badge-icon">⏳</span>
+            <span id="countdown-text">Set Exam Date</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Views Container -->
+      <div class="views-container">
+        
+        <!-- 1. DASHBOARD VIEW -->
+        <section class="view-tab active" id="dashboard-view">
+          
+          <!-- Key Metrics -->
+          <div class="metrics-grid">
+            <div class="metric-card alert" id="metric-overdue-card">
+              <div class="metric-icon-box">🚨</div>
+              <div class="metric-details">
+                <div class="metric-label">Overdue Revisions</div>
+                <div class="metric-value" id="metric-overdue-count">0</div>
+                <div class="metric-subtext">Needs immediate recall</div>
+              </div>
+            </div>
+
+            <div class="metric-card due" id="metric-due-card">
+              <div class="metric-icon-box">⏰</div>
+              <div class="metric-details">
+                <div class="metric-label">Due Today</div>
+                <div class="metric-value" id="metric-due-count">0</div>
+                <div class="metric-subtext">Scheduled SRS revisions</div>
+              </div>
+            </div>
+
+            <div class="metric-card primary">
+              <div class="metric-icon-box">📖</div>
+              <div class="metric-details">
+                <div class="metric-label">Active Micro-Units</div>
+                <div class="metric-value" id="metric-studied-count">0</div>
+                <div class="metric-subtext" id="metric-studied-subtext">0 of 218 sub-topics active</div>
+              </div>
+            </div>
+
+            <div class="metric-card success">
+              <div class="metric-icon-box">🏆</div>
+              <div class="metric-details">
+                <div class="metric-label">Mastered Sub-Topics</div>
+                <div class="metric-value" id="metric-mastered-count">0</div>
+                <div class="metric-subtext">Completed 4+ revisions</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard Grid (2 columns) -->
+          <div class="dashboard-grid">
+            
+            <!-- Left: Due & Overdue Revisions Queue -->
+            <div class="dashboard-left">
+              
+              <!-- Overdue Alert Section -->
+              <div class="card-panel" id="overdue-panel" style="display:none; border-color: rgba(239, 68, 68, 0.4);">
+                <div class="panel-header">
+                  <h3 style="color: #f87171;">🚨 Overdue Revisions <span class="badge-count" id="overdue-badge-count" style="background:#ef4444;">0</span></h3>
+                  <button type="button" class="btn-secondary" id="catchup-all-btn" style="font-size:12px; padding: 4px 10px;">Postpone all +1 Day</button>
+                </div>
+                <div class="revision-items-list" id="overdue-items-list">
+                  <!-- Dynamic overdue items -->
+                </div>
+              </div>
+
+              <!-- Today's Revision Queue -->
+              <div class="card-panel">
+                <div class="panel-header">
+                  <h3>🎯 Due For Revision Today <span class="badge-count" id="due-badge-count">0</span></h3>
+                  <div class="panel-actions">
+                    <span style="font-size:12px; color:var(--text-muted);">SRS 1-3-7-21 Rule</span>
+                  </div>
+                </div>
+                
+                <div class="revision-items-list" id="today-revision-list">
+                  <!-- Dynamic revision items -->
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right: Segmented Study Logger & Suggested Topics -->
+            <div class="dashboard-right">
+              
+              <!-- Segmented Paper & Part Study Logger -->
+              <div class="card-panel">
+                <div class="panel-header">
+                  <h3>⚡ Start Studying a Micro-Topic</h3>
+                </div>
+                
+                <!-- 1. Segmented Buttons for Paper & Part -->
+                <label style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px; display:block;">
+                  1. Select Paper & Part
+                </label>
+                <div class="part-segmented-control" id="logger-part-segments">
+                  <button type="button" class="part-segment-btn active" data-part-id="p1_part1" onclick="setLoggerPart('p1_part1')">P-I: Part I (GK/IQ)</button>
+                  <button type="button" class="part-segment-btn" data-part-id="p1_part2" onclick="setLoggerPart('p1_part2')">P-I: Part II (Technical)</button>
+                  <button type="button" class="part-segment-btn" data-part-id="p2_secA" onclick="setLoggerPart('p2_secA')">P-II: Sec A (Struct/Geo)</button>
+                  <button type="button" class="part-segment-btn" data-part-id="p2_secB" onclick="setLoggerPart('p2_secB')">P-II: Sec B (Water)</button>
+                  <button type="button" class="part-segment-btn" data-part-id="p2_secC" onclick="setLoggerPart('p2_secC')">P-II: Sec C (Transport)</button>
+                  <button type="button" class="part-segment-btn" data-part-id="p2_secD" onclick="setLoggerPart('p2_secD')">P-II: Sec D (Sanitary)</button>
+                </div>
+
+                <!-- 2. Select Main Topic -->
+                <label style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px; display:block;">
+                  2. Select Topic
+                </label>
+                <select id="logger-topic-select" class="filter-select" style="width:100%; margin-bottom:12px;" onchange="handleLoggerTopicChange(this.value)">
+                  <!-- Dynamically populated based on chosen Part -->
+                </select>
+
+                <!-- 3. Granular Micro-Topic (Sub-Unit for 1 Day Study) -->
+                <label style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px; display:flex; justify-content:space-between;">
+                  <span>3. Choose Sub-Topic for Today's Study:</span>
+                  <span id="logger-subtopic-count" style="color:var(--primary); font-weight:600;"></span>
+                </label>
+                
+                <div class="subtopics-picker-container" id="logger-subtopics-list">
+                  <!-- Dynamically populated sub-topic radio cards -->
+                </div>
+
+                <!-- Action Button -->
+                <button type="button" class="btn-primary" id="logger-start-study-btn" style="width:100%;" onclick="handleLoggerStartStudy()">
+                  + Mark Sub-Topic as Studied Today (Start SRS)
+                </button>
+              </div>
+
+              <!-- Suggested Next Micro-Topics -->
+              <div class="card-panel">
+                <div class="panel-header">
+                  <h3>💡 Suggested Next Sub-Topics</h3>
+                </div>
+                <div id="suggested-topics-list" style="display:flex; flex-direction:column; gap:10px;">
+                  <!-- Dynamic suggestions -->
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- 2. SYLLABUS MATRIX VIEW -->
+        <section class="view-tab" id="syllabus-view">
+          
+          <div class="syllabus-controls">
+            <div class="paper-switch-tabs">
+              <button type="button" class="paper-tab-btn active" data-paper="all" id="filter-paper-all">All Papers (218 Sub-Units)</button>
+              <button type="button" class="paper-tab-btn" data-paper="paper1" id="filter-paper-1">Paper I (General)</button>
+              <button type="button" class="paper-tab-btn" data-paper="paper2" id="filter-paper-2">Paper II (Technical)</button>
+            </div>
+
+            <div class="syllabus-filters">
+              <select id="filter-part" class="filter-select">
+                <option value="all">Section/Part: All</option>
+                <option value="p1_part1">Paper I - Part (I): GK & Ability</option>
+                <option value="p1_part2">Paper I - Part (II): General Technical</option>
+                <option value="p2_secA">Paper II - Section (A): Structure & Geotech</option>
+                <option value="p2_secB">Paper II - Section (B): Water Resources</option>
+                <option value="p2_secC">Paper II - Section (C): Transportation</option>
+                <option value="p2_secD">Paper II - Section (D): Sanitary & Env</option>
+              </select>
+
+              <select id="filter-status" class="filter-select">
+                <option value="all">Status: All</option>
+                <option value="not_started">Not Started</option>
+                <option value="studying">In Progress / SRS</option>
+                <option value="due">Revision Due</option>
+                <option value="mastered">Mastered</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Syllabus Hierarchy Accordion with Nested Subtopics -->
+          <div class="syllabus-accordion" id="syllabus-accordion-container">
+            <!-- Dynamic Syllabus Accordion injected via JS -->
+          </div>
+
+        </section>
+
+        <!-- 3. CALENDAR VIEW -->
+        <section class="view-tab" id="calendar-view">
+          
+          <div class="card-panel">
+            <div class="calendar-header-bar">
+              <h3 id="calendar-month-title" style="font-size:18px;">Month Year</h3>
+              <div class="calendar-nav-controls">
+                <button type="button" class="btn-secondary" id="cal-prev-btn">◀ Prev</button>
+                <button type="button" class="btn-secondary" id="cal-today-btn">Today</button>
+                <button type="button" class="btn-secondary" id="cal-next-btn">Next ▶</button>
+              </div>
+            </div>
+
+            <div class="calendar-grid" id="calendar-grid">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Selected Day Schedule Details -->
+          <div class="card-panel" id="calendar-day-details-panel" style="margin-top:20px;">
+            <div class="panel-header">
+              <h3 id="selected-date-title">Schedule for Selected Date</h3>
+            </div>
+            <div id="selected-date-items" class="revision-items-list">
+              <!-- Selected day revisions -->
+            </div>
+          </div>
+
+        </section>
+
+        <!-- 4. ANALYTICS VIEW -->
+        <section class="view-tab" id="analytics-view">
+          
+          <div class="analytics-grid">
+            
+            <!-- Overall Syllabus Progress -->
+            <div class="card-panel" style="text-align:center;">
+              <div class="panel-header">
+                <h3>Overall Micro-Units Completion</h3>
+              </div>
+              <div class="progress-ring-container">
+                <div class="progress-circle" id="overall-progress-circle" style="--percent: 0;">
+                  <div class="progress-circle-inner">
+                    <span id="overall-progress-text">0%</span>
+                  </div>
+                </div>
+              </div>
+              <p style="font-size:13px; color:var(--text-secondary); margin-top:8px;">
+                <span id="analytics-completed-topics">0</span> of 218 Sub-Topics Completed / In Progress
+              </p>
+            </div>
+
+            <!-- Paper I vs Paper II Comparison -->
+            <div class="card-panel">
+              <div class="panel-header">
+                <h3>Paper Progress Breakdown</h3>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:16px; margin-top:10px;">
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:6px;">
+                    <span style="color:var(--accent-p1);">Paper I: General Subject (107 sub-units)</span>
+                    <span id="p1-progress-pct">0%</span>
+                  </div>
+                  <div style="height:10px; background:var(--bg-input); border-radius:5px; overflow:hidden;">
+                    <div id="p1-progress-bar" style="height:100%; width:0%; background:var(--accent-p1); transition: width 0.4s ease;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:6px;">
+                    <span style="color:var(--accent-p2);">Paper II: Technical Subject (111 sub-units)</span>
+                    <span id="p2-progress-pct">0%</span>
+                  </div>
+                  <div style="height:10px; background:var(--bg-input); border-radius:5px; overflow:hidden;">
+                    <div id="p2-progress-bar" style="height:100%; width:0%; background:var(--accent-p2); transition: width 0.4s ease;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Retention Mastery Distribution -->
+            <div class="card-panel">
+              <div class="panel-header">
+                <h3>Spaced Repetition Stages</h3>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px; font-size:13px;">
+                <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-color);">
+                  <span>👶 Initial Study (Step 0)</span>
+                  <strong id="stage-0-count">0</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-color);">
+                  <span>🌱 1st Revision (+1d)</span>
+                  <strong id="stage-1-count">0</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-color);">
+                  <span>🌿 2nd Revision (+3d)</span>
+                  <strong id="stage-2-count">0</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-color);">
+                  <span>🌳 3rd Revision (+7d)</span>
+                  <strong id="stage-3-count">0</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:6px 0;">
+                  <span>🏆 Mastered (+21d / Complete)</span>
+                  <strong id="stage-4-count" style="color:var(--success);">0</strong>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Study Activity Heatmap -->
+          <div class="card-panel" style="margin-top:24px;">
+            <div class="panel-header">
+              <h3>🔥 Study & Revision Activity (Last 30 Days)</h3>
+              <span style="font-size:12px; color:var(--text-muted);" id="total-reviews-count">0 total reviews logged</span>
+            </div>
+            <div class="heatmap-container" id="activity-heatmap">
+              <!-- Injected by JS -->
+            </div>
+          </div>
+
+        </section>
+
+        <!-- 5. SETTINGS & BACKUP VIEW -->
+        <section class="view-tab" id="settings-view">
+          
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px;">
+            
+            <!-- Exam Target Date -->
+            <div class="card-panel">
+              <div class="panel-header">
+                <h3>🎯 Target Exam Date</h3>
+              </div>
+              <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
+                Set your expected PSC 7th written examination date to track daily countdown and pace.
+              </p>
+              <div style="display:flex; gap:10px;">
+                <input type="date" id="exam-date-input" class="filter-select" style="flex:1;">
+                <button type="button" class="btn-primary" id="save-exam-date-btn">Save</button>
+              </div>
+            </div>
+
+            <!-- SRS Intervals Config -->
+            <div class="card-panel">
+              <div class="panel-header">
+                <h3>🧠 Spaced Repetition Interval (Days)</h3>
+              </div>
+              <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
+                Standard science-backed intervals: 1 day, 3 days, 7 days, 21 days, 60 days.
+              </p>
+              <div style="display:flex; gap:10px;">
+                <input type="text" id="srs-intervals-input" class="filter-select" value="1, 3, 7, 21, 60" style="flex:1;">
+                <button type="button" class="btn-primary" id="save-intervals-btn">Update</button>
+              </div>
+            </div>
+
+            <!-- Backup & Restore -->
+            <div class="card-panel">
+              <div class="panel-header">
+                <h3>💾 Data Backup & Restore</h3>
+              </div>
+              <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
+                Export your progress as a JSON file to keep safe or transfer to another device.
+              </p>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button type="button" class="btn-primary" id="export-json-btn">⬇️ Export Progress JSON</button>
+                <label class="btn-secondary" style="cursor:pointer; display:inline-flex; align-items:center;">
+                  ⬆️ Import Backup JSON
+                  <input type="file" id="import-json-input" accept=".json" style="display:none;">
+                </label>
+              </div>
+            </div>
+
+            <!-- Reset Options -->
+            <div class="card-panel" style="border-color: rgba(239, 68, 68, 0.3);">
+              <div class="panel-header">
+                <h3 style="color:#f87171;">⚠️ Reset & Demo Data</h3>
+              </div>
+              <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;">
+                Load sample demo progress to test the spaced repetition engine, or reset to a fresh clean slate.
+              </p>
+              <div style="display:flex; gap:10px;">
+                <button type="button" class="btn-secondary" id="load-demo-data-btn">✨ Load Demo Data</button>
+                <button type="button" class="btn-secondary" id="reset-all-btn" style="color:#f87171; border-color:rgba(239,68,68,0.4);">
+                  🗑️ Reset All Data
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Side Drawer: Sub-Topic Notes, Formula Sheet & Revision Logs -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <aside class="side-drawer" id="side-drawer">
+    <div class="drawer-header">
+      <div>
+        <span class="rev-paper-tag" id="drawer-paper-tag">Paper I</span>
+        <h3 id="drawer-topic-code" style="font-size:17px; margin-top:2px;">1.1.a Sub-Topic Title</h3>
+      </div>
+      <button type="button" class="drawer-close-btn" id="drawer-close-btn">&times;</button>
+    </div>
+    
+    <div class="drawer-body">
+      
+      <!-- Topic Metadata Details -->
+      <div>
+        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Sub-Topic Context</label>
+        <p id="drawer-topic-desc" style="font-size:13px; color:var(--text-primary); margin-top:4px; line-height:1.4;"></p>
+      </div>
+
+      <!-- Quick Actions -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" class="btn-primary" id="drawer-study-now-btn" style="flex:1;">Mark Studied Today</button>
+        <button type="button" class="btn-secondary" id="drawer-master-btn">Mark Mastered</button>
+      </div>
+
+      <!-- Notes / Key Formulas Editor -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <label style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">My Notes & Formulas</label>
+          <span style="font-size:11px; color:var(--text-muted);">Auto-saved</span>
+        </div>
+        <textarea id="drawer-notes-editor" class="notes-editor" placeholder="Write key summary, formulas, or past question hints here..."></textarea>
+      </div>
+
+      <!-- Revision History Log Timeline -->
+      <div>
+        <label style="font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:10px; display:block;">
+          Revision History Log
+        </label>
+        <div id="drawer-history-timeline" style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="syllabus-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
