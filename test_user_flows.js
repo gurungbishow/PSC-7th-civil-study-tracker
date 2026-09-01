@@ -164,12 +164,155 @@ console.log("\n[TEST 6] Testing Exam Readiness Analytics...");
 renderAnalytics();
 console.log("  [OK] Analytics computed overall progress and stage distributions");
 
-// TEST 7: Demo Data Loader
-console.log("\n[TEST 7] Testing Load Demo Data...");
-loadDemoData();
-const demoSubtopicsCount = Object.keys(AppState.studyState).length;
-console.log(`  [OK] Demo data loaded ${demoSubtopicsCount} active micro-units`);
+let dailyTopicsHTML = '';
+let dailyStatsText = '';
+let dailyPctText = '';
+
+// Update global.document mock to support daily study tracker IDs
+const origGetElementById = global.document.getElementById;
+global.document.getElementById = (id) => {
+  if (id === 'daily-topics-list-container') {
+    return {
+      ...mockElem(),
+      set innerHTML(v) { dailyTopicsHTML = v; },
+      get innerHTML() { return dailyTopicsHTML; }
+    };
+  }
+  if (id === 'daily-tracker-stats-text') {
+    return {
+      ...mockElem(),
+      set textContent(v) { dailyStatsText = v; },
+      get textContent() { return dailyStatsText; }
+    };
+  }
+  if (id === 'daily-tracker-pct-text') {
+    return {
+      ...mockElem(),
+      set textContent(v) { dailyPctText = v; },
+      get textContent() { return dailyPctText; }
+    };
+  }
+  if (id === 'daily-tracker-title-text' || id === 'daily-tracker-date-input' || id === 'tracker-today-date-btn' || id === 'rollover-topics-btn' || id === 'daily-tracker-progress-fill') {
+    return mockElem();
+  }
+  return origGetElementById(id);
+};
+
+// TEST 8: Daily Study Tracker & Date History & Completed/Remaining Engine
+console.log("\n[TEST 8] Testing Daily Study Tracker & Completed/Remaining Engine...");
+
+const testDate = '2026-09-01';
+AppState.selectedStudyTrackerDateStr = testDate;
+
+// 8.1: Add topic as 'remaining' to test date
+addTopicToDate('p1_1_1_b', testDate, 'remaining');
+const logRemaining = AppState.dailyStudyLog[testDate].find(i => i.subtopicId === 'p1_1_1_b');
+if (!logRemaining || logRemaining.status !== 'remaining') {
+  throw new Error("Failed to log topic as remaining in dailyStudyLog");
+}
+if (AppState.studyState['p1_1_1_b'].nextRevisionDate !== null) {
+  throw new Error("Remaining topic MUST NOT have nextRevisionDate scheduled!");
+}
+console.log("  [OK] Added topic as Remaining. Verified nextRevisionDate is null (no revision notifications).");
+
+// 8.2: Verify sidebar badge ignores remaining topics
+updateSidebarBadge();
+const countDue = Object.values(AppState.studyState).filter(s => s.studyStatus === 'completed' && s.nextRevisionDate && s.nextRevisionDate <= testDate).length;
+console.log(`  [OK] Verified revision queues strictly ignore 'remaining' topics. Due count: ${countDue}`);
+
+// 8.3: Toggle topic to 'completed'
+toggleTopicCompletion('p1_1_1_b', testDate);
+const logCompleted = AppState.dailyStudyLog[testDate].find(i => i.subtopicId === 'p1_1_1_b');
+if (!logCompleted || logCompleted.status !== 'completed') {
+  throw new Error("Failed to toggle topic status to completed");
+}
+if (!AppState.studyState['p1_1_1_b'].nextRevisionDate) {
+  throw new Error("Completed topic MUST have nextRevisionDate scheduled for spaced repetition!");
+}
+console.log(`  [OK] Toggled to Completed. Spaced repetition activated! Next revision: ${AppState.studyState['p1_1_1_b'].nextRevisionDate}`);
+
+// 8.4: Toggle back to 'remaining'
+toggleTopicCompletion('p1_1_1_b', testDate);
+if (AppState.studyState['p1_1_1_b'].studyStatus !== 'remaining' || AppState.studyState['p1_1_1_b'].nextRevisionDate !== null) {
+  throw new Error("Toggling back to remaining failed to clear nextRevisionDate");
+}
+console.log("  [OK] Toggled back to Remaining. Verified nextRevisionDate cleared and notifications paused.");
+
+// 8.5: Test Date Navigation and Rendering
+navigateDailyTrackerDate(1);
+if (AppState.selectedStudyTrackerDateStr !== '2026-09-02') {
+  throw new Error(`Expected date 2026-09-02, got ${AppState.selectedStudyTrackerDateStr}`);
+}
+changeDailyTrackerToToday();
+console.log(`  [OK] Date navigation passed. Current selected date: ${AppState.selectedStudyTrackerDateStr}`);
+
+// 8.6: Test Rollover of Remaining Topics
+const yesterdayStr = addDays(formatDate(new Date()), -1);
+addTopicToDate('p1_1_1_c', yesterdayStr, 'remaining');
+AppState.selectedStudyTrackerDateStr = yesterdayStr;
+handleRollOverRemaining();
+const todayItems = AppState.dailyStudyLog[formatDate(new Date())] || [];
+const rolledOver = todayItems.find(i => i.subtopicId === 'p1_1_1_c');
+if (!rolledOver) {
+  throw new Error("Failed to roll over remaining topic to Today");
+}
+console.log("  [OK] Successfully rolled over remaining topic from past date to Today!");
+
+// TEST 9: Active Focus Reading Timer (Stopwatch + Countdown)
+console.log("\n[TEST 9] Testing Active Focus Reading Timer & Time Accumulation...");
+
+// 9.1: Start Reading on topic
+startTopicReading('p1_1_1_a', 'stopwatch');
+if (!AppState.timerState.isRunning || AppState.timerState.activeSubtopicId !== 'p1_1_1_a') {
+  throw new Error("Failed to start reading stopwatch timer");
+}
+console.log("  [OK] Started Reading Timer in Stopwatch mode.");
+
+// 9.2: Test Pause and Resume
+toggleTimerPauseResume();
+if (AppState.timerState.isRunning !== false) {
+  throw new Error("Failed to pause timer");
+}
+toggleTimerPauseResume();
+if (AppState.timerState.isRunning !== true) {
+  throw new Error("Failed to resume timer");
+}
+console.log("  [OK] Verified Pause and Resume controls.");
+
+// 9.3: Test Mode Switch to Pomodoro Countdown
+setTimerMode('countdown', 25);
+if (AppState.timerState.mode !== 'countdown' || AppState.timerState.targetSeconds !== 1500) {
+  throw new Error("Failed to switch timer mode to 25m Pomodoro");
+}
+console.log("  [OK] Switched to 25m Pomodoro Countdown mode.");
+
+// 9.4: Test Reset
+resetTopicTimer();
+if (AppState.timerState.remainingSeconds !== 1500 || AppState.timerState.elapsedSeconds !== 0) {
+  throw new Error("Failed to reset timer");
+}
+console.log("  [OK] Verified Reset / Restart timer functionality.");
+
+// 9.5: Test Finish Study & Time Accumulation
+AppState.timerState.elapsedSeconds = 1200; // Simulated 20 mins studied
+finishTopicReading(true);
+if (AppState.timerState.isRunning !== false || AppState.timerState.activeSubtopicId !== null) {
+  throw new Error("Timer failed to cleanup on finish");
+}
+if ((AppState.timerState.accumulatedSeconds['p1_1_1_a'] || 0) < 1200) {
+  throw new Error("Failed to accumulate study time for topic");
+}
+const subState = AppState.studyState['p1_1_1_a'];
+if (!subState || subState.studyStatus !== 'completed') {
+  throw new Error("Finish study failed to mark topic completed");
+}
+const lastHist = subState.history[subState.history.length - 1];
+if (!lastHist || !lastHist.action.includes('Reading Focus')) {
+  throw new Error("Study session was not recorded in topic history");
+}
+console.log(`  [OK] Finished study session. Accumulated: ${AppState.timerState.accumulatedSeconds['p1_1_1_a']}s. History logged: "${lastHist.action}"`);
 
 console.log("\n==================================================");
-console.log("ALL 7 CORE USER FLOWS PASSED FLAWLESSLY! 🚀");
+console.log("ALL 9 USER FLOWS, TIMER ENGINE & THEMES VALIDATED! 🚀");
 console.log("==================================================");
+

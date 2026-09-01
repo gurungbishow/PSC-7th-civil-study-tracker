@@ -55,6 +55,45 @@
         </button>
       </nav>
       
+      <!-- Sidebar Preparation Overview Metrics (1 per row) -->
+      <div class="sidebar-metrics-section">
+        <div class="sidebar-section-title">Preparation Overview</div>
+        <div class="sidebar-metrics-list">
+          <div class="sidebar-metric-row alert" id="metric-overdue-card" title="Overdue Revisions">
+            <div class="sidebar-metric-left">
+              <span class="sidebar-metric-icon">🚨</span>
+              <span class="sidebar-metric-lbl">Overdue</span>
+            </div>
+            <span class="sidebar-metric-val" id="metric-overdue-count">0</span>
+          </div>
+
+          <div class="sidebar-metric-row due" id="metric-due-card" title="Due Today for Revision">
+            <div class="sidebar-metric-left">
+              <span class="sidebar-metric-icon">⏰</span>
+              <span class="sidebar-metric-lbl">Due Today</span>
+            </div>
+            <span class="sidebar-metric-val" id="metric-due-count">0</span>
+          </div>
+
+          <div class="sidebar-metric-row primary" id="metric-active-card" title="Active Studied Micro-Units">
+            <div class="sidebar-metric-left">
+              <span class="sidebar-metric-icon">📖</span>
+              <span class="sidebar-metric-lbl">Active Units</span>
+            </div>
+            <span class="sidebar-metric-val" id="metric-studied-count">0</span>
+          </div>
+
+          <div class="sidebar-metric-row success" id="metric-mastered-card" title="Mastered Sub-Topics (Completed 4+ revisions)">
+            <div class="sidebar-metric-left">
+              <span class="sidebar-metric-icon">🏆</span>
+              <span class="sidebar-metric-lbl">Mastered</span>
+            </div>
+            <span class="sidebar-metric-val" id="metric-mastered-count">0</span>
+          </div>
+        </div>
+        <span id="metric-studied-subtext" style="display:none;"></span>
+      </div>
+
       <div class="sidebar-footer">
         <div class="streak-pill" id="streak-indicator" title="Current Daily Study Streak">
           <span>🔥</span>
@@ -91,57 +130,106 @@
         </div>
       </header>
 
+      <!-- Sticky Active Reading / Study Focus Timer Bar -->
+      <div class="active-focus-timer-bar" id="active-focus-timer-bar" style="display:none;">
+        <div class="timer-topic-info">
+          <span class="live-pulse-dot" id="timer-live-dot"></span>
+          <span class="rev-paper-tag p1" id="timer-topic-tag">Paper I</span>
+          <div class="timer-topic-text-wrap">
+            <span class="timer-topic-code" id="timer-topic-code">1.1.a</span>
+            <span class="timer-topic-title" id="timer-topic-title">Physical Geography of Nepal</span>
+          </div>
+        </div>
+
+        <div class="timer-center-controls">
+          <div class="timer-mode-selector">
+            <button type="button" class="timer-mode-btn active" id="timer-mode-stopwatch" onclick="setTimerMode('stopwatch')">⏱️ Stopwatch</button>
+            <button type="button" class="timer-mode-btn" id="timer-mode-25m" onclick="setTimerMode('countdown', 25)">🍅 25m</button>
+            <button type="button" class="timer-mode-btn" id="timer-mode-45m" onclick="setTimerMode('countdown', 45)">🔥 45m</button>
+            <button type="button" class="timer-mode-btn" id="timer-mode-60m" onclick="setTimerMode('countdown', 60)">🎯 60m</button>
+          </div>
+          <div class="timer-digital-display" id="timer-display-digits">00:00</div>
+        </div>
+
+        <div class="timer-action-buttons">
+          <button type="button" class="btn-timer-ctrl pause" id="timer-toggle-play-btn" onclick="toggleTimerPauseResume()" title="Pause / Resume Timer">
+            <span id="timer-play-icon">⏸️</span>
+            <span id="timer-play-text">Pause</span>
+          </button>
+          <button type="button" class="btn-timer-ctrl reset" id="timer-reset-btn" onclick="resetTopicTimer()" title="Reset / Restart Timer">
+            ↺ Reset
+          </button>
+          <button type="button" class="btn-timer-ctrl finish" id="timer-finish-btn" onclick="finishTopicReading(true)" title="Log Study Time & Mark Completed">
+            ✓ Finish Study
+          </button>
+          <button type="button" class="btn-timer-ctrl-close" id="timer-close-btn" onclick="closeTimerBar()" title="Hide Timer Bar">
+            &times;
+          </button>
+        </div>
+        
+        <div class="timer-mini-progress-track">
+          <div class="timer-mini-progress-fill" id="timer-progress-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
       <!-- Views Container -->
       <div class="views-container">
         
         <!-- 1. DASHBOARD VIEW -->
         <section class="view-tab active" id="dashboard-view">
           
-          <!-- Key Metrics -->
-          <div class="metrics-grid">
-            <div class="metric-card alert" id="metric-overdue-card">
-              <div class="metric-icon-box">🚨</div>
-              <div class="metric-details">
-                <div class="metric-label">Overdue Revisions</div>
-                <div class="metric-value" id="metric-overdue-count">0</div>
-                <div class="metric-subtext">Needs immediate recall</div>
-              </div>
-            </div>
-
-            <div class="metric-card due" id="metric-due-card">
-              <div class="metric-icon-box">⏰</div>
-              <div class="metric-details">
-                <div class="metric-label">Due Today</div>
-                <div class="metric-value" id="metric-due-count">0</div>
-                <div class="metric-subtext">Scheduled SRS revisions</div>
-              </div>
-            </div>
-
-            <div class="metric-card primary">
-              <div class="metric-icon-box">📖</div>
-              <div class="metric-details">
-                <div class="metric-label">Active Micro-Units</div>
-                <div class="metric-value" id="metric-studied-count">0</div>
-                <div class="metric-subtext" id="metric-studied-subtext">0 of 218 sub-topics active</div>
-              </div>
-            </div>
-
-            <div class="metric-card success">
-              <div class="metric-icon-box">🏆</div>
-              <div class="metric-details">
-                <div class="metric-label">Mastered Sub-Topics</div>
-                <div class="metric-value" id="metric-mastered-count">0</div>
-                <div class="metric-subtext">Completed 4+ revisions</div>
-              </div>
-            </div>
-          </div>
-
           <!-- Dashboard Grid (2 columns) -->
           <div class="dashboard-grid">
             
-            <!-- Left: Due & Overdue Revisions Queue -->
+            <!-- Left: Daily Study Tracker & Revisions Queue -->
             <div class="dashboard-left">
               
+              <!-- Daily Study Tracker & Date-Based Topic History -->
+              <div class="card-panel daily-tracker-panel" id="daily-study-tracker-panel">
+                <div class="panel-header" style="flex-wrap: wrap; gap: 10px;">
+                  <div>
+                    <h3 id="daily-tracker-header-title" style="display:flex; align-items:center; gap:8px;">
+                      <span>📅</span>
+                      <span id="daily-tracker-title-text">Today's Study Topics</span>
+                    </h3>
+                    <p style="font-size:12px; color:var(--text-secondary); margin-top:2px;" id="daily-tracker-subtitle">
+                      Track micro-topics studied on this date. Mark Completed to activate SRS revisions.
+                    </p>
+                  </div>
+                  
+                  <div class="daily-tracker-date-controls">
+                    <button type="button" class="btn-secondary btn-nav-date" id="tracker-prev-date-btn" title="Previous Day" onclick="navigateDailyTrackerDate(-1)">◀</button>
+                    <button type="button" class="btn-secondary btn-nav-date active-date-pill" id="tracker-today-date-btn" onclick="changeDailyTrackerToToday()">Today</button>
+                    <button type="button" class="btn-secondary btn-nav-date" id="tracker-next-date-btn" title="Next Day" onclick="navigateDailyTrackerDate(1)">▶</button>
+                    <input type="date" id="daily-tracker-date-input" class="date-picker-input" onchange="changeDailyTrackerDate(this.value)" title="Pick specific date">
+                  </div>
+                </div>
+
+                <!-- Daily Summary & Progress Bar -->
+                <div class="daily-progress-bar-container">
+                  <div class="daily-progress-meta">
+                    <span id="daily-tracker-stats-text">0 Topics Logged (0 Completed, 0 Remaining)</span>
+                    <span id="daily-tracker-pct-text" style="font-weight:700; color:var(--primary);">0% Done</span>
+                  </div>
+                  <div class="daily-progress-track">
+                    <div class="daily-progress-fill" id="daily-tracker-progress-fill" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <!-- List of Topics for Selected Date -->
+                <div class="daily-topics-list" id="daily-topics-list-container">
+                  <!-- Dynamic items rendered by renderDailyStudyTracker() -->
+                </div>
+
+                <!-- Footer Action Bar -->
+                <div class="daily-tracker-footer" id="daily-tracker-footer-actions">
+                  <span style="font-size:11px; color:var(--text-muted);">💡 Tip: Topics marked "Remaining" will NOT send revision alerts until completed.</span>
+                  <button type="button" class="btn-secondary" id="rollover-topics-btn" style="font-size:11px; padding:4px 10px; display:none;" onclick="handleRollOverRemaining()">
+                    ⏩ Move Remaining to Today
+                  </button>
+                </div>
+              </div>
+
               <!-- Overdue Alert Section -->
               <div class="card-panel" id="overdue-panel" style="display:none; border-color: rgba(239, 68, 68, 0.4);">
                 <div class="panel-header">
@@ -209,10 +297,15 @@
                   <!-- Dynamically populated sub-topic radio cards -->
                 </div>
 
-                <!-- Action Button -->
-                <button type="button" class="btn-primary" id="logger-start-study-btn" style="width:100%;" onclick="handleLoggerStartStudy()">
-                  + Mark Sub-Topic as Studied Today (Start SRS)
-                </button>
+                <!-- Action Buttons -->
+                <div style="display:flex; gap:8px; margin-top:4px;">
+                  <button type="button" class="btn-secondary" id="logger-add-remaining-btn" style="flex:1;" onclick="handleLoggerAddStudy('remaining')">
+                    ⏳ Add to Date (Remaining)
+                  </button>
+                  <button type="button" class="btn-primary" id="logger-start-study-btn" style="flex:1.2;" onclick="handleLoggerAddStudy('completed')">
+                    ✓ Mark Completed (Start SRS)
+                  </button>
+                </div>
               </div>
 
               <!-- Suggested Next Micro-Topics -->
